@@ -19,31 +19,25 @@ test_driver <- function(skip = NULL, ctx = get_default_context()) {
     },
 
     #' \item{\code{data_type}}{
-    #' SQL Data types exist for all basic R data types. dbDataType() does not
-    #' throw an error and returns a nonempty atomic character
+    #' SQL Data types exist for all basic R data types (except \code{list}).
+    #' dbDataType() does not throw an error and returns a nonempty atomic
+    #' character
     #' }
     data_type = function() {
-      check_driver_data_type <- function(value) {
-        eval(bquote({
-          expect_is(dbDataType(ctx$drv, .(value)), "character")
-          expect_equal(length(dbDataType(ctx$drv, .(value))), 1L)
-          expect_match(dbDataType(ctx$drv, .(value)), ".")
-        }))
-      }
+      expect_driver_has_data_type(ctx, logical(1))
+      expect_driver_has_data_type(ctx, integer(1))
+      expect_driver_has_data_type(ctx, numeric(1))
+      expect_driver_has_data_type(ctx, character(1))
+      expect_driver_has_data_type(ctx, Sys.Date())
+      expect_driver_has_data_type(ctx, Sys.time())
+    },
 
-      expect_driver_has_data_type <- function(value) {
-        eval(bquote(
-          expect_error(check_driver_data_type(.(value)), NA)))
-      }
-
-      # Q: Should the "raw" type be matched to BLOB?
-      expect_driver_has_data_type(logical(1))
-      expect_driver_has_data_type(integer(1))
-      expect_driver_has_data_type(numeric(1))
-      expect_driver_has_data_type(character(1))
-      expect_driver_has_data_type(list(1))
-      expect_driver_has_data_type(Sys.Date())
-      expect_driver_has_data_type(Sys.time())
+    #' \item{\code{data_type_list}}{
+    #' SQL Data type exists for the \code{list} data types dbDataType() does not
+    #' throw an error and returns a nonempty atomic character
+    #' }
+    data_type_list = function() {
+      expect_driver_has_data_type(ctx, list(1))
     },
 
     #' \item{\code{constructor_strict}}{
@@ -109,4 +103,17 @@ test_driver <- function(skip = NULL, ctx = get_default_context()) {
   )
   #'}
   run_tests(tests, skip, test_suite)
+}
+
+check_driver_data_type <- function(ctx, value) {
+  eval(bquote({
+    expect_is(dbDataType(ctx$drv, .(value)), "character")
+    expect_equal(length(dbDataType(ctx$drv, .(value))), 1L)
+    expect_match(dbDataType(ctx$drv, .(value)), ".")
+  }))
+}
+
+expect_driver_has_data_type <- function(ctx, value) {
+  eval(bquote(
+    expect_error(check_driver_data_type(ctx, .(value)), NA)))
 }
